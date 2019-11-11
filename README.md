@@ -19,26 +19,26 @@ ejaberd不支持的功能。
 
 ### Startalk 主要包含：
 
-+ [ejabberd](https://github.com/qunarcorp/ejabberd-open)
++ [ejabberd](https://github.com/startalkIM/ejabberd)
 
 IM核心组件，负责维持与客户端的长连接和消息路由
 
-+ [or](https://github.com/qunarcorp/or_open)
++ [or](https://github.com/startalkIM/openresty_ng)
 
 IM负载均衡组件，负责验证客户端身份，以及转发http请求到对应的后台服务
-+ [im_http_service](https://github.com/qunarcorp/im_http_service_open)
++ [im_http_service](https://github.com/startalkIM/im_http_service)
 
 IM HTTP接口服务，负责IM相关数据的查询、设置以及历史消息同步(基于tomcat的java服务)
 
-+ [qfproxy](https://github.com/qunarcorp/qfproxy_open)
++ [qfproxy](https://github.com/startalkIM/qfproxy)
 
 IM文件服务，负责文件的上传和下载(基于tomcat的java服务)
 
-+ [push_service](https://github.com/qunarcorp/push_service_open)
++ [push_service](https://github.com/startalkIM/push_service)
 
 IM的push服务，用于离线消息的推送(基于tomcat的java服务)
 
-+ [qtalk_serach](https://github.com/qunarcorp/qtalk_search)
++ [qtalk_serach](https://github.com/startalkIM/search)
 
 提供远程搜索人员和群的服务
 
@@ -90,7 +90,7 @@ redis: 6379
 + redis密码是：123456，服务地址是：127.0.0.1
 + 数据库初始化sql在doc目录下
 + 保证可访问主机的：5202、8080端口（关掉防火墙：sudo systemctl stop firewalld.service）
-+ IM服务的域名是:qtalk(大家安装线上之前，最好确定好这个值，一旦定了，之后修改的成本就很高，可以参考[domain修改](https://github.com/qunarcorp/ejabberd-open/wiki/host%E4%BF%AE%E6%94%B9)来修改)
++ IM服务的域名是:qtalk(大家安装线上之前，最好确定好这个值，一旦定了，之后修改的成本就很高，可以参考[domain修改](https://github.com/startalkIM/ejabberd/wiki/host%E4%BF%AE%E6%94%B9)来修改)
 + tls证书：默认安装用的是一个测试证书，线上使用，请更换/startalk/ejabberd/etc/ejabberd/server.pem文件，生成方法见[securing-ejabberd-with-tls-encryption](https://blog.process-one.net/securing-ejabberd-with-tls-encryption/)
 + 出现文件覆盖提示时，输入yes敲回车即可
 + 安装文档中#开头输入的命令表示root执行的，$开头的命令表示普通用户
@@ -151,12 +151,12 @@ postgres     ALL= (ALL)    ALL
 # su - startalk
 $ mkdir /startalk/download
 $ cd /startalk/download
-$ git clone https://github.com/qunarcorp/ejabberd-open.git
-$ git clone https://github.com/qunarcorp/or_open.git
-$ git clone https://github.com/qunarcorp/qtalk_search.git
+$ git clone https://github.com/startalkIM/ejabberd.git
+$ git clone https://github.com/startalkIM/openresty_ng.git
+$ git clone https://github.com/startalkIM/search.git
 
-$ cp ejabberd-open/doc/qtalk.sql /startalk/
-$ cp ejabberd-open/doc/init.sql /startalk/
+$ cp ejabberd/doc/qtalk.sql /startalk/
+$ cp ejabberd/doc/init.sql /startalk/
 $ chmod 777 /startalk/qtalk.sql
 ```
 
@@ -305,7 +305,7 @@ Eshell V8.3  (abort with ^G)
 
 ```
 $ cd /startalk/download
-$ cd ejabberd-open/
+$ cd ejabberd/
 $ ./configure --prefix=/startalk/ejabberd --with-erlang=/startalk/erlang1903 --enable-pgsql --enable-full-xml
 $ make
 $ make install
@@ -397,7 +397,7 @@ $ supervisorctl -c conf/supervisor.conf reload
 确保服务启动（观察日志,确保无报错）
 $ tail -100f log/access.log 
 ```
-可以执行以下脚本来检查一些常见的错误: 下载该文件[check.sh](https://github.com/qunarcorp/or_open/blob/master/tools/check.sh)
+可以执行以下脚本来检查一些常见的错误: 下载该文件[check.sh](https://github.com/startalkIM/openresty_ng/blob/master/tools/check.sh)
 
 ```
 # sed -i 's/ip/自己的ip/g' ./check.sh
@@ -434,7 +434,7 @@ $ tail -100f log/access.log
 
 ## wiki地址
 
-[wiki页](https://github.com/qunarcorp/ejabberd-open/wiki)
+[wiki页](https://github.com/startalkIM/ejabberd/wiki)
 ## 配置文件修改
 
 参考文档[setting.md](doc/setting.md)

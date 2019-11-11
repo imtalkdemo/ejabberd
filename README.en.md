@@ -12,27 +12,27 @@ Startalk takes ejabberd as basis, but revised it based on the need of business. 
 
 ### Startalk includes:
 
-+ [ejabberd](https://github.com/qunarcorp/ejabberd-open)
++ [ejabberd](https://github.com/startalkIM/ejabberd)
 
 the core component of IM. It maintains the connection with client app and message routing
 
-+ [or](https://github.com/qunarcorp/or_open)
++ [or](https://github.com/startalkIM/openresty_ng)
 
 the load balancing component of IM. It verifies the identity of client app and forwards the request from http to the corresponding backstage services
 
-+ [im_http_service](https://github.com/qunarcorp/im_http_service_open)
++ [im_http_service](https://github.com/startalkIM/im_http_service)
 
 Port service of IM HTTP. It takes charge of searching the data and settings, as well as synchronizing the chat history (a java service based on tomcat).
 
-+ [qfproxy](https://github.com/qunarcorp/qfproxy_open)
++ [qfproxy](https://github.com/startalkIM/qfproxy)
 
 IM file service. It takes charge of uploading and downloading the file (a java service based on tomcat).
 
-+ [push_service](https://github.com/qunarcorp/push_service_open)
++ [push_service](https://github.com/startalkIM/push_service)
 
 Push service in IM. It pushes off-line messages (a java service based on tomcat).
 
-+ [qtalk_serach](https://github.com/qunarcorp/qtalk_search)
++ [serach](https://github.com/startalkIM/search)
 
 It provides the service to search people and groups remotely
 
@@ -61,7 +61,7 @@ openresty：8080
 im_http_service：8005 8009 8081
 qfproxy：8006 8010 8082
 push_service：8007 8011 8083
-qtalk_search：8888
+search：8888
 
 im： 5202 10050 5280
 
@@ -146,12 +146,12 @@ root    ALL= (ALL)    ALL
 # su - startalk
 $ mkdir /startalk/download
 $ cd /startalk/download
-$ git clone https://github.com/qunarcorp/ejabberd-open.git
-$ git clone https://github.com/qunarcorp/or_open.git
-$ git clone https://github.com/qunarcorp/qtalk_search.git
+$ git clone https://github.com/startalkIM/ejabberd.git
+$ git clone https://github.com/startalkIM/openresty_ng.git
+$ git clone https://github.com/startalkIM/search.git
 
-$ cp ejabberd-open/doc/qtalk.sql /startalk/
-$ cp ejabberd-open/doc/init.sql /startalk/
+$ cp ejabberd/doc/qtalk.sql /startalk/
+$ cp ejabberd/doc/init.sql /startalk/
 $ chmod 777 /startalk/qtalk.sql
 ```
 
@@ -255,7 +255,7 @@ $ make
 $ make install
 
 # install or
-$ cd /startalk/download/or_open
+$ cd /startalk/download/openresty_ng
 $ cp -rf conf /startalk/openresty/nginx
 $ cp -rf lua_app /startalk/openresty/nginx
 
@@ -301,7 +301,7 @@ Eshell V8.3  (abort with ^G)
 
 ```
 $ cd /startalk/download
-$ cd ejabberd-open/
+$ cd ejabberd/
 $ ./configure --prefix=/startalk/ejabberd --with-erlang=/startalk/erlang1903 --enable-pgsql --enable-full-xml
 $ make
 $ make install
@@ -319,11 +319,11 @@ $ ps -ef | grep 's ejabberd'
 startalk 23515     1  4 09:58 ?        00:00:03 /startalk/erlang1903/lib/erlang/erts-8.3/bin/beam.smp -K true -P 250000 -- -root /startalk/erlang1903/lib/erlang -progname erl -- -home /home/startalk -- -name ejabberd@startalk.com -noshell -noinput -noshell -noinput -mnesia dir "/startalk/ejabberd/var/lib/ejabberd" -ejabberd log_rate_limit 20000 log_rotate_size 504857600 log_rotate_count 41 log_rotate_date "$D0" -s ejabberd -smp auto start
 ```
 
-### Install java service: Under “/startalk/download/or_open/deps/tomcat/”, there are 3 java services zips; alternatively, you can decompress them by source code and deploy them
+### Install java service: Under “/startalk/download/openresty_ng/deps/tomcat/”, there are 3 java services zips; alternatively, you can decompress them by source code and deploy them
 
 ```
 $ cd /startalk/download/
-$ cp -rf or_open/deps/tomcat /startalk/
+$ cp -rf openresty_ng/deps/tomcat /startalk/
 $ cd /startalk/tomcat
 
 # Change the navigation address and extended keyboard
@@ -371,12 +371,12 @@ tcp6       0      0 127.0.0.1:8006          :::*                    LISTEN      
 
 ```
 Install python 3 or above, the take 3.6 as a standard
-$ cd /startalk/download/qtalk_search
+$ cd /startalk/download/search
 $ sudo yum install https://centos7.iuscommunity.org/ius-release.rpm
 $ sudo yum install python36u
 Install pip3
 $ sudo yum -y install python-pip
-Please find the modules in“/startalk/download/qtalk_search/requirements.txt”. You’d better use virtualenv to deploy the environment for modules, or python3.6 will be installed under system python environment, which will lead to conflict with python2.7 in centos; meanwhile, you need to install the pip of python3, and appoint the modules needed by the installation of pip3
+Please find the modules in“/startalk/download/search/requirements.txt”. You’d better use virtualenv to deploy the environment for modules, or python3.6 will be installed under system python environment, which will lead to conflict with python2.7 in centos; meanwhile, you need to install the pip of python3, and appoint the modules needed by the installation of pip3
 $ sudo pip install -U virtualenv （install virtualenv）
 $ sudo pip install --upgrade pip
 $ virtualenv --system-site-packages -p python3.6 ./venv （create venv environment under current directory）
@@ -387,7 +387,7 @@ $ sudo vim ./conf/configure.ini
 Install the module that needed by this program (if you didn’t install virtualenv, you need sudo yum install python36u-pip, replacing the defaulted pip by sudo pip3.6)
 $ pip install -r requirements.txt
 Set “PYTHONPATH”
-$ export PYTHONPATH=path/to/project/qtalk_search:$PYTHONPATH
+$ export PYTHONPATH=path/to/project/search:$PYTHONPATH
 Start at backstage
 $ supervisord -c conf/supervisor.conf
 $ supervisorctl -c conf/supervisor.conf reload
@@ -395,7 +395,7 @@ Make sure that the service has started
 $ tail -100f log/access.log 
 ```
 
-Please run the code below to check common errors: [check.sh](https://github.com/qunarcorp/or_open/blob/master/tools/check.sh)
+Please run the code below to check common errors: [check.sh](https://github.com/startalkIM/openresty_ng/blob/master/tools/check.sh)
 
 ```
 # sed -i 's/ip/your ip/g' ./check.sh
@@ -426,7 +426,7 @@ When submitting the pull request, you can combine it to different branches based
 
 ## Address of wiki
 
-[wiki](https://github.com/qunarcorp/ejabberd-open/wiki)
+[wiki](https://github.com/startalkIM/ejabberd/wiki)
 
 ##  Change the deployment file 
 
