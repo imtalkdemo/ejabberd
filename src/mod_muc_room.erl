@@ -3358,6 +3358,7 @@ send_kickban_presence(UJID, JID, Reason, Code, NewAffiliation,
 		    _ -> []
 		  end
 	    end,
+    catch qtalk_muc:del_muc_room_users(StateData#state.server_host,StateData#state.room,StateData#state.host,JID#jid.user,JID#jid.lserver),
     catch send_muc_del_registed_presence(JID,StateData),
     lists:foreach(fun (J) ->
 			  tab_remove_online_user(J, StateData),
