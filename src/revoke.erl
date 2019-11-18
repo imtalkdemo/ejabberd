@@ -68,7 +68,10 @@ update_muc_msg_by_id(Server, From, _To, _SPacket, Packet, Msg_id) ->
             Time1 = binary_to_integer(Msec),
             Time2 = binary_to_integer(Time),
             Nick1 = qtalk_public:get_nick(From#jid.luser),
-            case  (Time1/1000 - Time2 < 120 andalso (Nick1 =:= N orelse Nick1 =:= From#jid.luser)) of
+            FromLUser = From#jid.luser,
+            FromLServer = From#jid.lserver,
+            FNick =  <<FromLUser/binary, "_", FromLServer/binary>>,
+            case  (Time1/1000 - Time2 < 120 andalso (N =:= FNick orelse Nick1 =:= N)) of
                 true ->
                      %%send_kafka_msg(From,To,SPacket, <<"groupchat">>),
                      %%true;
