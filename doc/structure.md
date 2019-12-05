@@ -175,3 +175,5 @@
 1. startalk\_web\_node的项目的作用是什么？
 2. search的服务目的是什么？
 3. 客服系统的的整体结构是什么？
+4. 客服系统的的整体结构是什么？有哪几个模块组成？ qchat_admin_open， startalk_node就这两个模块，后天依赖于整个qtalk的IM系统
+5. qtalk_admin_open包含了qtalk_background_management的代码是否可以直接使用qtalk_admin_open的代码？
