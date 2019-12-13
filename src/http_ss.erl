@@ -62,12 +62,6 @@ handle_ss_msg(<<"consult">>, Args) ->
     UserType = proplists:get_value("userType",Args),
     ?INFO_MSG("############# args ~p ~n", [{Topic, MFrom, FromHost, MTo, ToHost, MBody, CreateTime, MsgID, RealFrom, RealTo, UserType}]),
     %% 1. 创建群组
-    %% {<<"chat">>,<<"b7065d1015294608b1c61c2f2a345389">>,<<"qtalk">>,<<"shop_1">>,<<"qtalk">>,<<"<message msec_times='1576223382035' type='consult' from='b7065d1015294608b1c61c2f2a345389@qtalk/web-5812118' to='shop_1@qtalk' realfrom='b7065d1015294608b1c61c2f2a345389@qtalk' realto='admin@qtalk' channelid='{&quot;cn&quot;:&quot;consult&quot;,&quot;d&quot;:&quot;send&quot;,&quot;usrType&quot;:&quot;usr&quot;}' qchatid='4' isHiddenMsg='0'><body msgType='1' maType='6' id='7B56C32CF8874C19FDFEA7BB60202D33'>1</body><active xmlns='http://jabber.org/protocol/chatstates'/></message>">>,1576223382035,<<"7B56C32CF8874C19FDFEA7BB60202D33">>,<<"b7065d1015294608b1c61c2f2a345389@qtalk">>,<<"admin@qtalk">>,undefined}
-    %% MucID = MFrom,
-    %% MucName = MTo,
-    %% MucOwner = MTo,
-    %% MucOwnerHost = ToHost,
-    %% MucDesc = MTo,
     MucDomain = <<<<"conference.">>/binary, ToHost/binary>>,
     Servers = ejabberd_config:get_myhosts(),
     LServer = lists:nth(1,Servers),
@@ -80,6 +74,7 @@ handle_ss_msg(<<"consult">>, Args) ->
                {"muc_domain", MucDomain}
               ],
     CreateMucRet = http_muc_create:create_muc(MucCreateArgs),
+    ?INFO_MSG("this is create muc result ~p ~n", [CreateMucRet]),
     case check_http_result(CreateMucRet) of
         true ->
             %% 2. 添加客服人员进群
@@ -95,19 +90,14 @@ handle_ss_msg(<<"consult">>, Args) ->
                               {"muc_domain", MucDomain},
                               {"muc_member", Seats}
                              ],
-            http_muc_add_user:add_muc_users(MucAddUserArgs);
+            http_muc_add_user:add_muc_users(MucAddUserArgs),
+            [FirstSeat|_] = Seats,
+            send_auto_reply(MTo, MFrom, FirstSeat, ToHost);
         false ->
+            ?INFO_MSG("this is multi muc xxxxxxxx ~n", []),
             ignore
     end,
     %% 3. 发送消息
-    %% From = proplists:get_value("From",Args),
-    %% To = proplists:get_value("To",Args),
-    %% Body = proplists:get_value("Body",Args),
-    %% Type = proplists:get_value("Type",Args,<<"chat">>),
-    %% Msg_Type  = proplists:get_value("Msg_Type",Args),
-    %% Host = proplists:get_value("Host",Args,Server),
-    %% Domain = proplists:get_value("Domain",Args),
-    %% Extend_Info = proplists:get_value("Extend_Info",Args,<<"">>),
     %% 取出真正的消息
     Packet = fxml_stream:parse_element(MBody),
     Body = fxml:get_subtag_cdata(Packet, <<"body">>),
@@ -125,20 +115,40 @@ handle_ss_msg(<<"consult">>, Args) ->
     ?INFO_MSG("ending send message ~p ~n", [SendMsgRet]),
     http_utils:gen_success_result();
 handle_ss_msg(<<"groupchat">>, Args) ->
+    %% {<<"groupchat">>,<<"dcce03d04eaf47e0a367a7805249fa73">>,<<"conference.qtalk">>,<<"qtalk">>,<<229,188,160,232,182,133>>,<<"<message from='dcce03d04eaf47e0a367a7805249fa73@conference.qtalk/chao.zhang_qtalk' to='dcce03d04eaf47e0a367a7805249fa73@conference.qtalk' sendjid='chao.zhang@qtalk' realfrom='chao.zhang@qtalk' msec_times='1576230549270' isHiddenMsg='0' type='groupchat'><body id='D439470324EF4FC8AAC4DAB77C83ADF6' maType='6' msgType='1'>111</body><active xmlns='http://jabber.org/protocol/chatstates'/></message>">>,<<"1">>,0,1576230549270,<<"D439470324EF4FC8AAC4DAB77C83ADF6">>,<<"chao.zhang@qtalk">>,[<<"chao.zhang@qtalk">>,<<"shop_1@qtalk">>]}
     Topic = proplists:get_value("topic",Args),
     MucRoomName = proplists:get_value("muc_room_name",Args),
+    Title = proplists:get_value("title",Args),
     RoomHost = proplists:get_value("room_host",Args),
     Host  = proplists:get_value("host",Args),
     Nick = proplists:get_value("nick",Args),
-    Packet = proplists:get_value("packet",Args),
+    MBody = proplists:get_value("packet",Args),
     HaveSubject = proplists:get_value("have_subject",Args),
     Size = proplists:get_value("size",Args),
     CreateTime = proplists:get_value("create_time",Args),
     MsgID = proplists:get_value("msg_id",Args),
     RealFrom = proplists:get_value("realfrom",Args),
     UserList = proplists:get_value("userlist",Args),
-    ?INFO_MSG("######### args ~p ~n", [{Topic, MucRoomName, RoomHost, Host, Nick, Packet, HaveSubject, Size, CreateTime, MsgID, RealFrom, UserList}]),
+    ?INFO_MSG("######### args ~p ~n", [{Topic, Title, MucRoomName, RoomHost, Host, Nick, MBody, HaveSubject, Size, CreateTime, MsgID, RealFrom, UserList}]),
+    Packet = fxml_stream:parse_element(MBody),
+    Body = fxml:get_subtag_cdata(Packet, <<"body">>),
+    SendMsgArgs = [
+                   {"From", <<"shop_1">>},
+                   {"To", [{obj,[{"User",MucRoomName}]}]},
+                   {"Body", Body},
+                   {"Type", <<"chat">>},
+                   {"Msg_Type", <<"1">>},
+                   {"Host", Host},
+                   {"Domain", Host}
+                  ],
+    ?INFO_MSG("starting send message to consutor ~p ~n", [SendMsgArgs]),
+    SendMsgRet = http_send_message:http_send_message(SendMsgArgs),
+    ?INFO_MSG("ending send message to consutor ~p ~n", [SendMsgRet]),
+    http_utils:gen_success_result();
+handle_ss_msg(Type, Args) ->
+    ?INFO_MSG("this is ignore msg ~p ~n", [{Type, Args}]),
     http_utils:gen_success_result().
+
 
 %%%===================================================================
 %%% Internal functions
@@ -175,7 +185,7 @@ get_seatids(LServer, BusID) ->
 check_http_result(RetJson) ->
     case rfc4627:decode(RetJson) of
         {ok,{obj,Ret}, []} ->
-            case proplists:get_value(errcode, Ret, undefined) of
+            case proplists:get_value("errcode", Ret, undefined) of
                 <<"0">> ->
                     true;
                 _Other ->
@@ -184,3 +194,38 @@ check_http_result(RetJson) ->
         _ ->
             false
     end.
+
+
+send_auto_reply(From, To, RealFrom, Host) ->
+    ?INFO_MSG("this is auto reply ~p ~n", [{From, To, RealFrom, Host}]),
+    FromJID = jlib:make_jid(From, Host, <<>>),
+    ToJID = jlib:make_jid(To, Host, <<>>),
+    FromJIDStr = jlib:jid_to_string(FromJID),
+    ToJIDStr = jlib:jid_to_string(ToJID),
+    RealFromJIDStr = jlib:jid_to_string(jlib:make_jid(RealFrom, Host, <<>>)),
+    Packet = make_message_packet(FromJIDStr, ToJIDStr, RealFromJIDStr),
+    ejabberd_router:route(FromJID, ToJID, Packet),
+    ok.
+make_message_packet(FromJIDStr, ToJIDStr, RealFromJIDStr) ->
+    Now = qtalk_public:get_exact_timestamp(),
+    Bid = list_to_binary("qcadmin" ++ binary_to_list(randoms:get_string()) ++ integer_to_list(qtalk_public:get_exact_timestamp())),
+    fxml:to_xmlel(
+      {xmlel,
+       <<"message">>,
+       [{<<"from">>,FromJIDStr},
+        {<<"to">>,ToJIDStr},
+        {<<"msec_times">>,integer_to_binary(Now)},
+        {<<"realfrom">>,RealFromJIDStr},
+        {<<"realto">>,ToJIDStr},
+        {<<"type">>,<<"consult">>},
+        {<<"channelid">>,
+         <<"{\"d\":\"recv\",\"usrType\":\"usr\",\"cn\":\"consult\"}">>},
+        {<<"qchatid">>,<<"5">>},
+        {<<"auto_reply">>,<<"true">>},
+        {<<"no_update_msg_log">>,<<"true">>}],
+       [{xmlel,<<"body">>,
+         [{<<"id">>, Bid},
+          {<<"msgType">>,<<"1">>},
+          {<<"maType">>,<<"3">>}],
+         [{xmlcdata, <<"HI, What can I do for you">>}]},
+       {xmlel, <<"active">>, [], []}]}).

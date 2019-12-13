@@ -118,8 +118,8 @@ init([Host, ServerHost, Access, Room, HistorySize,
     State1 = set_opts(DefRoomOpts, State),
     store_room(State1),
 
-    NewState = invite_all_register_user(State1), 
-    
+    NewState = invite_all_register_user(State1),
+
     ?INFO_MSG("Created MUC room ~s@~s by ~s",
 	      [Room, Host, jid:to_string(Creator)]),
 
@@ -135,8 +135,8 @@ init([Host, ServerHost, Access, Room, HistorySize, RoomShaper, Opts]) ->
 				  history = lqueue_new(HistorySize),
 				  jid = jid:make(Room, Host, <<"">>),
 				  room_shaper = Shaper}),
-    
-    NewState = invite_all_register_user(State),    
+
+    NewState = invite_all_register_user(State),
 
     TRef = start_timer(),
     {ok, normal_state, NewState#state{tref = TRef}}.
@@ -716,7 +716,7 @@ handle_event({check_user_in_room,User}, _StateName,StateData) ->
 	  _ ->
 		ok
 	  end   end,   (?DICT):to_list(StateData#state.users)),
-    {next_state, normal_state, StateData};	
+    {next_state, normal_state, StateData};
 handle_event(update_state, _StateName,
          StateData) ->
     LServer = ejabberd_sql:escape(StateData#state.server_host),
@@ -1127,7 +1127,7 @@ process_groupchat_message(From,
 					       false ->
 						   NewStateData1
 					     end,
-                 
+
 
 			     {next_state, normal_state, NewStateData2}
 		       end;
@@ -1178,7 +1178,7 @@ is_user_allowed_message_nonparticipant(JID,
 				       StateData) ->
     case get_service_affiliation(JID, StateData) of
       owner -> true;
-      _ -> 
+      _ ->
          check_jid_is_register(JID,StateData#state.room,StateData#state.host)
     end.
 
@@ -2052,11 +2052,11 @@ nick_collision(User, Nick, StateData) ->
 
 add_new_user(From, Nick,Packet,StateData) ->
     do_add_new_user(true,From, Nick,Packet,StateData).
-    
+
 do_add_new_user(Flag,From1, Nick,
 	     #xmlel{name = Name, attrs = Attrs, children = Els} = Packet,
 	     StateData) ->
-    From = jlib:jid_remove_resource(From1),   
+    From = jlib:jid_remove_resource(From1),
     Lang = fxml:get_attr_s(<<"xml:lang">>, Attrs),
     UserRoomJID = jid:replace_resource(StateData#state.jid, Nick),
     MaxUsers = get_max_users(StateData),
@@ -3478,7 +3478,7 @@ process_iq_owner(From, set, Lang, SubEl, StateData) ->
 		?INFO_MSG("Destroyed MUC room ~s by the owner ~s",
 			  [jid:to_string(StateData#state.jid),
 			   jid:to_string(From)]),
-        
+
         catch qtalk_sql:restore_muc_user_mark(StateData#state.server_host,StateData#state.room,StateData#state.host),
         catch qtalk_sql:del_user_register_mucs(StateData#state.server_host,StateData#state.room,StateData#state.host),
         catch qtalk_sql:del_muc_vcard_info(StateData#state.server_host,StateData#state.room,<<"Owner Destroy">>),
@@ -5198,7 +5198,7 @@ has_body_or_subject(Packet) ->
 %%%%%%%% @date 2017-03-01
 %%%%%%%% 邀请所有已注册的群成员
 %%%%%%%%--------------------------------------------------------------------
-invite_all_register_user(State)->   
+invite_all_register_user(State)->
     Packet = #xmlel{name = <<"presence">>,
                     attrs = [{<<"priority">>,<<"5">>},{<<"version">>,<<"2">>}],
                     children = [#xmlel{name = <<"x">>,
@@ -5225,7 +5225,7 @@ do_invite_all_register_user(UL,Packet,StateData) ->
 
 %%%%%%%%--------------------------------------------------------------------
 %%%%%%%% @date 2017-03-01
-%%%%%%%% user no resource 
+%%%%%%%% user no resource
 %%%%%%%%--------------------------------------------------------------------
 is_user_online_with_no_resource(JID, StateData) ->
     LJID = jlib:jid_tolower(JID),
@@ -5234,7 +5234,7 @@ is_user_online_with_no_resource(JID, StateData) ->
 
 %%%%%%%%--------------------------------------------------------------------
 %%%%%%%% @date 2017-03-01
-%%%%%%%% check_jid_is_register,use in is_user_allowed_message_nonparticipant 
+%%%%%%%% check_jid_is_register,use in is_user_allowed_message_nonparticipant
 %%%%%%%%--------------------------------------------------------------------
 check_jid_is_register(JID,Room,Host) ->
     case catch ejabberd_sql:sql_query([<<"select username from muc_room_users where muc_name='">>, Room, <<"' and domain ='">>, Host, <<"' and username = '">>, JID#jid.luser, <<"' and host = '">>, JID#jid.lserver, <<"';">>]) of
@@ -5244,7 +5244,7 @@ check_jid_is_register(JID,Room,Host) ->
 
 %%%%%%%%--------------------------------------------------------------------
 %%%%%%%% @date 2017-03-01
-%%%%%%%% iq 信令创建群组 
+%%%%%%%% iq 信令创建群组
 %%%%%%%%--------------------------------------------------------------------
 process_iq_create_muc(_From,get,_Lang,_SubEl,_StateData) ->
     {error, ?ERR_NOT_ALLOWED};
@@ -5279,7 +5279,7 @@ add_muc_new_user(From,State) ->
                                                  attrs = [{<<"xmlns">>, ?NS_MUC_ADD_USER}],
                                                  children = []}]}),
     ejabberd_router:route(State#state.jid,From,Packet),
-    case 
+    case
         catch qtalk_muc:set_muc_room_users(State#state.server_host,From#jid.user,State#state.room,State#state.host,From#jid.lserver)
     of
         true -> handle_new_create_service_message(From, State);
@@ -5437,7 +5437,7 @@ do_add_muc_room_user(r_flag,From,Nick,Packet,StateData) ->
     end;
 do_add_muc_room_user(_,From,Nick,Packet,StateData) ->
     do_add_new_user(false,From, Nick,Packet,StateData).
-   
+
 %%%%%%%%--------------------------------------------------------------------
 %%%%%%%% @date 2017-03-01
 %%%%%%%% 通过Flag判断是否发送presence消息
@@ -5454,7 +5454,7 @@ send_presence_by_flag(true,From, Attrs,State,OldStateData) ->
 send_presence_by_flag(_,From,Attrs,State,_OldStateData) ->
     ?INFO_MSG("muc_room ~p add ~p new user ~p ~n",[State#state.room, fxml:get_attr_s(<<"version">>, Attrs), From#jid.luser]).
 
-    
+
 %%%%%%%%--------------------------------------------------------------------
 %%%%%%%% @date 2017-03-01
 %%%%%%%% 发送用户入群presence v2版本
@@ -5516,7 +5516,7 @@ send_user_join_muc_presence_v2(NJID, Reason, StateData) ->
                                                  children = ItemEls} | Status2]}])
     end,
 
-    ejabberd_router:route(jlib:jid_replace_resource(StateData#state.jid, Nick),RealJID, Packet). 
+    ejabberd_router:route(jlib:jid_replace_resource(StateData#state.jid, Nick),RealJID, Packet).
 
 %%%%%%%%--------------------------------------------------------------------
 %%%%%%%% @date 2017-03-01
@@ -5665,7 +5665,7 @@ send_muc_message(StateData,From,FromNick,Packet) ->
         FromLUser = From#jid.luser,
         FromLServer = From#jid.lserver,
         NewFrom = jlib:jid_replace_resource(StateData#state.jid,  <<FromLUser/binary, "_", FromLServer/binary>>),
-        To = Info#user.jid, 
+        To = Info#user.jid,
         NewPacket = jlib:replace_from_to(NewFrom, To, Packet),
         ejabberd_router:route(NewFrom,To,NewPacket)
     end, ?DICT:to_list(StateData#state.users)).
@@ -5696,7 +5696,7 @@ do_send_push_message(Time,Nick, FromJID, Packet, StateData, [PushUrl|Rest]) ->
         T -> binary_to_integer(T)
     end,
 
-    Msg_Id  = case catch fxml:get_tag_attr_s(<<"id">>,fxml:get_subtag(Packet,<<"body">>)) of 
+    Msg_Id  = case catch fxml:get_tag_attr_s(<<"id">>,fxml:get_subtag(Packet,<<"body">>)) of
         <<"">> -> list_to_binary(integer_to_list(Time));
         ID -> ID
     end,
@@ -5706,9 +5706,11 @@ do_send_push_message(Time,Nick, FromJID, Packet, StateData, [PushUrl|Rest]) ->
         _ -> Nick
     end,
 
+    ?INFO_MSG("xxxxxxxxx =========== ~p ~n", [StateData]),
     MsgContent = rfc4627:encode({obj, [{"topic", <<"groupchat">>},
     	                               {"type", <<"groupchat">>},
                                        {"muc_room_name", StateData#state.room},
+                                       {"title", (StateData#state.config)#config.title},
                                        {"room_host", StateData#state.host},
                                        {"host", FromJID#jid.lserver},
                                        {"nick", FromNick},
