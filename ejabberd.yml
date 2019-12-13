@@ -609,7 +609,19 @@ modules:
   ##   db_type: sql
   mod_ping: {}
   mod_extend_iq: {}
-  mod_http_service: {}
+  mod_http_service:
+    name: http
+    http_port: 10050
+    dispatches:
+      - "/qtalk/[...]:http_dispatch"
+      - "/qmonitor.jsp:http_qmonitor"
+      - "/send_muc_presence:http_muc_vcard_presence"
+      - "/reload_module:http_reload_module"
+  mod_ss:
+    name: ss
+    http_port: 10051
+    dispatches:
+      - "/ss/[...]:http_ss"
   mod_user_relation: {}
   ##mod_kafka_producer:
   ##   custom_vs_hash_hosts_chat_message:
@@ -653,7 +665,8 @@ default_domain: "conference.qtalk"
 
 push_url:
   - "http://127.0.0.1:8083/push_service/qtapi/token/sendMessageToPush.qunar"
-  - "http://127.0.0.1:8084/qchat_admin_open/msg/consumerMsg.qunar"
+  # - "http://127.0.0.1:8084/qchat_admin_open/msg/consumerMsg.qunar"
+  - "http://127.0.0.1:10051/ss/consumerMsg"
 
 auth_url: "http://127.0.0.1:8081/im_http_service/corp/newapi/auth/checktoken.qunar"
 

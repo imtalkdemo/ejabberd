@@ -1,6 +1,6 @@
 -module(http_send_message).
 
--export([handle/1]).
+-export([handle/1, http_send_message/1]).
 -include("ejabberd.hrl").
 -include("logger.hrl").
 -include("jlib.hrl").
@@ -37,8 +37,10 @@ http_send_message(Server,Args)->
     Domain = proplists:get_value("Domain",Args),
     Extend_Info = proplists:get_value("Extend_Info",Args,<<"">>),
     case Type of
-        <<"groupchat">> -> send_muc_msg(Server,From,To,Host,Domain,Body,Extend_Info,Msg_Type);
-        _ -> send_chat_msg(Server,From,To,Host,Body,Msg_Type,Extend_Info,Type)
+        <<"groupchat">> ->
+            send_muc_msg(Server,From,To,Host,Domain,Body,Extend_Info,Msg_Type);
+        _ ->
+            send_chat_msg(Server,From,To,Host,Body,Msg_Type,Extend_Info,Type)
     end.
 
 send_chat_msg(Server,From,To,Host,Body,Msg_Type,Extend_Info,Type) ->

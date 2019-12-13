@@ -37,17 +37,18 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 start(_Type, Args) ->
-    Dispatch = cowboy_router:compile([
-        {'_', [
-            {"/qtalk/[...]", http_dispatch, []},
-            {"/qmonitor.jsp",http_qmonitor,[]},
-            {"/send_muc_presence",http_muc_vcard_presence,[]},
-            {"/reload_module", http_reload_module, []}
-        ]}
-    ]),
-    cowboy:stop_listener(http),
+    ?DEBUG("this is start http service ~p ~n", [Args]),
+    HttpName = gen_mod:get_opt(name, Args, fun(A) -> A end, []),
+    Dispatches = gen_mod:get_opt(dispatches, Args, fun(A) -> A end, []),
+    Dispatchers = lists:map(fun(Dp) ->
+                      [Map, Mod] = re:split(Dp,"[:]",[{return,list}]),
+                      {Map, erlang:list_to_atom(Mod), []}
+              end, Dispatches),
+    Dispatch = cowboy_router:compile([{'_', Dispatchers}]),
     Http_port = gen_mod:get_opt(http_port, Args, fun(A) -> A end, 10050),
-    {ok,_} = cowboy:start_http(http, 200, [{port,Http_port}], [
+    cowboy:stop_listener(HttpName),
+
+    {ok,_} = cowboy:start_http(HttpName, 200, [{port,Http_port}], [
         {env, [{dispatch, Dispatch},{max_connections, infinity}]}
     ]).
 

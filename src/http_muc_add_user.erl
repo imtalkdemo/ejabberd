@@ -1,12 +1,12 @@
 -module(http_muc_add_user).
 
--export([handle/1]).
+-export([handle/1, add_muc_users/1]).
 -include("ejabberd.hrl").
 -include("logger.hrl").
 
 handle(Req) ->
     {Method, Req1} = cowboy_req:method(Req),
-    case Method of 
+    case Method of
         <<"POST">> -> do_handle(Req1);
         _ -> http_utils:cowboy_req_reply_json(http_utils:gen_fail_result(1, <<Method/binary, " is not disable">>), Req1)
     end.
@@ -37,9 +37,9 @@ add_muc_users(Server,Args) ->
     true ->
         Muc_jid = jlib:make_jid(Muc_id,Domain,<<"">>),
         Invite_Jid = jlib:make_jid(Muc_Towner,Host,<<"">>),
-        case Muc_member of 
+        case Muc_member of
         <<"">> -> ok;
-        _ -> 
+        _ ->
             IQ_Packet = http_muc_session:make_invite_iq(Muc_member, qtalk_public:get_default_host()),
             catch ejabberd_router:route(Invite_Jid,Muc_jid,IQ_Packet)
         end,
