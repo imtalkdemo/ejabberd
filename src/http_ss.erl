@@ -92,7 +92,8 @@ handle_ss_msg(<<"consult">>, Args) ->
                              ],
             http_muc_add_user:add_muc_users(MucAddUserArgs),
             [FirstSeat|_] = Seats,
-            send_auto_reply(MTo, MFrom, FirstSeat, ToHost);
+            send_auto_reply(MTo, MFrom, FirstSeat, ToHost),
+            insert_session_mapping(ShopID, RealTo, MTo, MFrom, MFrom, FirstSeat);
         false ->
             ?INFO_MSG("this is multi muc xxxxxxxx ~n", []),
             ignore
@@ -118,7 +119,6 @@ handle_ss_msg(<<"groupchat">>, Args) ->
     %% {<<"groupchat">>,<<"dcce03d04eaf47e0a367a7805249fa73">>,<<"conference.qtalk">>,<<"qtalk">>,<<229,188,160,232,182,133>>,<<"<message from='dcce03d04eaf47e0a367a7805249fa73@conference.qtalk/chao.zhang_qtalk' to='dcce03d04eaf47e0a367a7805249fa73@conference.qtalk' sendjid='chao.zhang@qtalk' realfrom='chao.zhang@qtalk' msec_times='1576230549270' isHiddenMsg='0' type='groupchat'><body id='D439470324EF4FC8AAC4DAB77C83ADF6' maType='6' msgType='1'>111</body><active xmlns='http://jabber.org/protocol/chatstates'/></message>">>,<<"1">>,0,1576230549270,<<"D439470324EF4FC8AAC4DAB77C83ADF6">>,<<"chao.zhang@qtalk">>,[<<"chao.zhang@qtalk">>,<<"shop_1@qtalk">>]}
     Topic = proplists:get_value("topic",Args),
     MucRoomName = proplists:get_value("muc_room_name",Args),
-    Title = proplists:get_value("title",Args),
     RoomHost = proplists:get_value("room_host",Args),
     Host  = proplists:get_value("host",Args),
     Nick = proplists:get_value("nick",Args),
@@ -129,21 +129,33 @@ handle_ss_msg(<<"groupchat">>, Args) ->
     MsgID = proplists:get_value("msg_id",Args),
     RealFrom = proplists:get_value("realfrom",Args),
     UserList = proplists:get_value("userlist",Args),
-    ?INFO_MSG("######### args ~p ~n", [{Topic, Title, MucRoomName, RoomHost, Host, Nick, MBody, HaveSubject, Size, CreateTime, MsgID, RealFrom, UserList}]),
+    ?INFO_MSG("######### args ~p ~n", [{Topic, MucRoomName, RoomHost, Host, Nick, MBody, HaveSubject, Size, CreateTime, MsgID, RealFrom, UserList}]),
     Packet = fxml_stream:parse_element(MBody),
     Body = fxml:get_subtag_cdata(Packet, <<"body">>),
-    SendMsgArgs = [
-                   {"From", <<"shop_1">>},
-                   {"To", [{obj,[{"User",MucRoomName}]}]},
-                   {"Body", Body},
-                   {"Type", <<"chat">>},
-                   {"Msg_Type", <<"1">>},
-                   {"Host", Host},
-                   {"Domain", Host}
-                  ],
-    ?INFO_MSG("starting send message to consutor ~p ~n", [SendMsgArgs]),
-    SendMsgRet = http_send_message:http_send_message(SendMsgArgs),
-    ?INFO_MSG("ending send message to consutor ~p ~n", [SendMsgRet]),
+    Admin = <<<<"admin@">>/binary, Host/binary>>,
+    case RealFrom =/= Admin andalso get_session(MucRoomName) of
+        {SessionID, _SeatName, ShopName} ->
+            SendMsgArgs = [
+                           {"From", ShopName},
+                           {"To", [{obj,[{"User",SessionID}]}]},
+                           {"Body", Body},
+                           {"Type", <<"chat">>},
+                           {"Msg_Type", <<"1">>},
+                           {"Host", Host},
+                           {"Domain", Host}
+                          ],
+            ShopJIDStr = <<ShopName/binary, "@", Host/binary>>,
+            case RealFrom =/= ShopJIDStr of
+                true ->
+                    ?INFO_MSG("starting send message to consutor ~p ~n", [{RealFrom, ShopName, Host, SendMsgArgs}]),
+                    SendMsgRet = http_send_message:http_send_message(SendMsgArgs),
+                    ?INFO_MSG("ending send message to consutor ~p ~n", [SendMsgRet]);
+                false ->
+                    ignore
+            end;
+        undefined ->
+            ignore
+    end,
     http_utils:gen_success_result();
 handle_ss_msg(Type, Args) ->
     ?INFO_MSG("this is ignore msg ~p ~n", [{Type, Args}]),
@@ -229,3 +241,23 @@ make_message_packet(FromJIDStr, ToJIDStr, RealFromJIDStr) ->
           {<<"maType">>,<<"3">>}],
          [{xmlcdata, <<"HI, What can I do for you">>}]},
        {xmlel, <<"active">>, [], []}]}).
+
+
+insert_session_mapping(ShopID, CustomName, ShopName, SessionID, MucID, SeatName) ->
+    Servers = ejabberd_config:get_myhosts(),
+    LServer = lists:nth(1,Servers),
+    %% insert session
+    ?INFO_MSG("init session mapping ~p ~n", [{ShopID, CustomName, ShopName, SessionID, MucID, SeatName}]),
+    ss_sql:insert_session(LServer, SessionID, MucID, SeatName, ShopName),
+    ss_sql:insert_session_mapping(LServer, CustomName, ShopID, SessionID, SeatName).
+
+get_session(MucID) ->
+    Servers = ejabberd_config:get_myhosts(),
+    LServer = lists:nth(1,Servers),
+    case catch ss_sql:get_session(LServer, MucID) of
+        {selected, _, [[SessionID, SeatName, ShopName]]} ->
+            {SessionID, SeatName, ShopName};
+        Error ->
+            ?DEBUG("get session error ~p ~n", [Error]),
+            undefined
+    end.

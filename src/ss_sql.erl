@@ -9,7 +9,10 @@
 -module(ss_sql).
 
 %% API
--export([get_seats/2]).
+-export([get_seats/2,
+         insert_session_mapping/5,
+         insert_session/5,
+         get_session/2]).
 
 %%%===================================================================
 %%% API
@@ -34,8 +37,27 @@ append_binary([Item], _Char, Str) ->
 append_binary([Item|Last], Char, Str) ->
     append_binary(Last, Char, <<Str/binary, Item/binary, Char/binary>>).
 
+insert_session_mapping(LServer, CustomName, ShopID, SessionID, SeatName) ->
+    ejabberd_sql:sql_query(LServer,
+                           [<<"insert into session_mapping(customer_name,shop_id,session_id, seat_name) values ('">>,
+                            CustomName, <<"', '">>,
+                            ShopID, <<"', '">>,
+                            SessionID, <<"', '">>,
+                            SeatName, <<"');">>]).
 
+%% UserName = mucID
+%% SeatName = FirstSeatName
+insert_session(LServer, SessionID, MucID, SeatName, ShopName) ->
+    ejabberd_sql:sql_query(LServer,
+                           [<<"insert into session(session_id,user_name,seat_name, shop_name) values ('">>,
+                            SessionID, <<"', '">>,
+                            MucID, <<"', '">>,
+                            SeatName, <<"', '">>,
+                            ShopName, <<"');">>]).
 
+get_session(LServer, MucID) ->
+    ejabberd_sql:sql_query(LServer,
+                           [<<"select session_id, seat_name, shop_name from session where user_name='">>, MucID, <<"';">>]).
 
 %%%===================================================================
 %%% Internal functions

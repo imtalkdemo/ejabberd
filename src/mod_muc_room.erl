@@ -5706,11 +5706,9 @@ do_send_push_message(Time,Nick, FromJID, Packet, StateData, [PushUrl|Rest]) ->
         _ -> Nick
     end,
 
-    ?INFO_MSG("xxxxxxxxx =========== ~p ~n", [StateData]),
     MsgContent = rfc4627:encode({obj, [{"topic", <<"groupchat">>},
     	                               {"type", <<"groupchat">>},
                                        {"muc_room_name", StateData#state.room},
-                                       {"title", (StateData#state.config)#config.title},
                                        {"room_host", StateData#state.host},
                                        {"host", FromJID#jid.lserver},
                                        {"nick", FromNick},
