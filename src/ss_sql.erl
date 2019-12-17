@@ -10,6 +10,8 @@
 
 %% API
 -export([get_seats/2,
+         get_seatids/2,
+         get_busid/2,
          insert_session_mapping/5,
          insert_session/5,
          get_session/2]).
