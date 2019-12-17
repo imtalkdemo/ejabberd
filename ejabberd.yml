@@ -36,7 +36,7 @@
 ## 4: Info
 ## 5: Debug
 ##
-loglevel: 4
+loglevel: 5
 
 ##
 ## rotation: Describe how to rotate logs. Either size and/or date can trigger
@@ -88,13 +88,13 @@ log_rate_limit: 20000
 ##
 ## hosts: Domains served by ejabberd.
 ## You can define one or several, for example:
-## hosts: 
+## hosts:
 ##   - "example.net"
 ##   - "example.com"
 ##   - "example.org"
 ##
 hosts:
-  - "qtalk"
+  - "dev.fsll.tech"
 
 ##
 ## route_subdomains: Delegate subdomains to other XMPP servers.
@@ -660,8 +660,8 @@ modules:
 ##
 
 allow_contrib_modules: true
-default_host: "qtalk"
-default_domain: "conference.qtalk"
+default_host: "dev.fsll.tech"
+default_domain: "conference.dev.fsll.tech"
 
 push_url:
   - "http://127.0.0.1:8083/push_service/qtapi/token/sendMessageToPush.qunar"
