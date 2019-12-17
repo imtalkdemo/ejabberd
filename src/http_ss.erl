@@ -132,7 +132,7 @@ handle_ss_msg(<<"groupchat">>, Args) ->
     ?INFO_MSG("######### args ~p ~n", [{Topic, MucRoomName, RoomHost, Host, Nick, MBody, HaveSubject, Size, CreateTime, MsgID, RealFrom, UserList}]),
     Packet = fxml_stream:parse_element(MBody),
     Body = fxml:get_subtag_cdata(Packet, <<"body">>),
-    case is_http_send(MsgID) andalso get_session(MucRoomName) of
+    case is_http_send(MsgID) == false andalso get_session(MucRoomName) of
         {SessionID, _SeatName, ShopName} ->
             SendMsgArgs = [
                            {"From", ShopName},
