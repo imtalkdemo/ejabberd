@@ -132,8 +132,7 @@ handle_ss_msg(<<"groupchat">>, Args) ->
     ?INFO_MSG("######### args ~p ~n", [{Topic, MucRoomName, RoomHost, Host, Nick, MBody, HaveSubject, Size, CreateTime, MsgID, RealFrom, UserList}]),
     Packet = fxml_stream:parse_element(MBody),
     Body = fxml:get_subtag_cdata(Packet, <<"body">>),
-    Admin = <<<<"admin@">>/binary, Host/binary>>,
-    case RealFrom =/= Admin andalso get_session(MucRoomName) of
+    case is_http_send(MsgID) andalso get_session(MucRoomName) of
         {SessionID, _SeatName, ShopName} ->
             SendMsgArgs = [
                            {"From", ShopName},
@@ -154,12 +153,19 @@ handle_ss_msg(<<"groupchat">>, Args) ->
                     ignore
             end;
         undefined ->
+            ignore;
+        false ->
             ignore
     end,
     http_utils:gen_success_result();
 handle_ss_msg(Type, Args) ->
     ?INFO_MSG("this is ignore msg ~p ~n", [{Type, Args}]),
     http_utils:gen_success_result().
+
+is_http_send(<<"http_", _/binary>>) ->
+    true;
+is_http_send(_) ->
+    false.
 
 
 %%%===================================================================
@@ -169,8 +175,8 @@ get_seats(LServer, ShopID) ->
     BusID = get_busid(LServer, ShopID),
     SeatIDs = get_seatids(LServer, BusID),
     case catch ss_sql:get_seats(LServer, SeatIDs) of
-        {selected, _, [SeatNames]} ->
-            SeatNames;
+        {selected, _, SeatNames} ->
+            lists:flatten(SeatNames);
         Error ->
             ?ERROR_MSG("get seats error ~p ~n", [Error]),
             []
@@ -187,8 +193,8 @@ get_busid(LServer, ShopID) ->
 
 get_seatids(LServer, BusID) ->
     case catch ss_sql:get_seatids(LServer, BusID) of
-        {selected, _, [SeatIds]} ->
-            SeatIds;
+        {selected, _, SeatIds} ->
+            lists:flatten(SeatIds);
         Error ->
             ?ERROR_MSG("get seatids error ~p ~n", [Error]),
             []
