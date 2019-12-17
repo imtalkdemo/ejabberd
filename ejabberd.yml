@@ -667,6 +667,7 @@ push_url:
   - "http://127.0.0.1:8083/push_service/qtapi/token/sendMessageToPush.qunar"
   # - "http://127.0.0.1:8084/qchat_admin_open/msg/consumerMsg.qunar"
   - "http://127.0.0.1:10051/ss/consumerMsg"
+  - "http://127.0.0.1:8023/robot_assistant/get_message"
 
 auth_url: "http://127.0.0.1:8081/im_http_service/corp/newapi/auth/checktoken.qunar"
 
