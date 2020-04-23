@@ -96,6 +96,14 @@ log_rate_limit: 20000
 hosts:
   - "dev.fsll.tech"
 
+commands_admin_access: all
+commands:
+  - add_commands:
+      - user
+      - admin
+      - restricted
+      - open
+
 ##
 ## route_subdomains: Delegate subdomains to other XMPP servers.
 ## For example, if this ejabberd serves example.org and you want
@@ -167,6 +175,7 @@ listen:
     module: ejabberd_http
     request_handlers:
       "/websocket": ejabberd_http_ws
+      "/api": mod_http_api
     ##  "/pub/archive": mod_http_fileserver
     web_admin: true
     http_bind: true
@@ -411,6 +420,9 @@ acl:
   ##   user:
   ##     - "aleksey@localhost"
   ##     - "ermine@example.org"
+  admin:
+    user:
+      - "admin@dev.fsll.tech"
   ##
   ## Blocked users
   ##
